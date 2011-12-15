@@ -2,6 +2,7 @@ package fr.shortcircuit.utils;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +21,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.Attributes;
+
+import com.mysql.jdbc.ResultSetMetaData;
 
 public class Parser implements IDatabaseViewConstants {
 	private Method test;
@@ -29,7 +33,6 @@ public class Parser implements IDatabaseViewConstants {
 	private String[] list;
 	
 	private DbManager DB;
-	
 	
 	@SuppressWarnings("static-access")
 	public Parser(UserInterface UI, DbManager db) {
@@ -213,4 +216,5 @@ public class Parser implements IDatabaseViewConstants {
 
 		  }
 		}
+
 	}

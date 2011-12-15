@@ -1,6 +1,7 @@
 package fr.shortcircuit.db;
 
 
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -33,6 +34,8 @@ public class DbManager
 	public String 				arrayContent[][];
 	public String 				arrayHeader[];
 	public String 				strConnectURL;
+	
+	private Object currentObject;
 	private static int id = 0;
 
 
@@ -71,9 +74,9 @@ public class DbManager
 	//login & password
 		myDbMetaData 				= myConnect.getMetaData();
 
-		System.out.println("DbManager: dbConnect: show DataBase MetaData:");
-		System.out.println("DbManager: dbConnect: productName=" 	+ myDbMetaData.getDatabaseProductName());
-		System.out.println("DbManager: dbConnect: productVersion=" 	+ myDbMetaData.getDatabaseProductVersion());
+		//System.out.println("DbManager: dbConnect: show DataBase MetaData:");
+		//System.out.println("DbManager: dbConnect: productName=" 	+ myDbMetaData.getDatabaseProductName());
+		//System.out.println("DbManager: dbConnect: productVersion=" 	+ myDbMetaData.getDatabaseProductVersion());
 		//etc... de nombreuses autres info sont disponibles
 		
 		//4eme etape: creation d'une instruction/formule, socle pour executer des requetes
@@ -104,7 +107,7 @@ public class DbManager
 		{
 			myResultSetMetaData			= myResultSet.getMetaData();
 
-			System.out.println("\r\nDbManager: dbConnect: show Query MetaData:");
+			//System.out.println("\r\nDbManager: dbConnect: show Query MetaData:");
 			
 			int nbrColumn				= myResultSetMetaData.getColumnCount();
 			List<String[]>	list		= new ArrayList<String[]>();
@@ -115,11 +118,11 @@ public class DbManager
 			{
 				arrayHeader[i]	= myResultSetMetaData.getColumnName(i + 1);
 				
-				System.out.println("DbManager: dbConnect: MetaInfo: columnName=" + myResultSetMetaData.getColumnName(i + 1) + ", columnType=" + myResultSetMetaData.getColumnTypeName(i + 1));
+				//System.out.println("DbManager: dbConnect: MetaInfo: columnName=" + myResultSetMetaData.getColumnName(i + 1) + ", columnType=" + myResultSetMetaData.getColumnTypeName(i + 1));
 				//etc... de nombreuses autres info sont disponibles
 			}
 
-			System.out.println("\r\nDbManager: dbConnect: show Query Data:");
+			//System.out.println("\r\nDbManager: dbConnect: show Query Data:");
 			
 			//6eme etape: parcours du resultSet et de ses donnŽes.
 			//la premi�re colonne porte l'index 1, ET NON 0 !!!
@@ -132,10 +135,10 @@ public class DbManager
 				content[3]				= myResultSet.getString(4);      
 				list.add(content);
 				
-				System.out.println("DbManager: dbConnect: resultSet 1st column=" 	+ content[0]); 
+				/*System.out.println("DbManager: dbConnect: resultSet 1st column=" 	+ content[0]); 
 				System.out.println("DbManager: dbConnect: resultSet 2nd column=" 	+ content[1] );
 				System.out.println("DbManager: dbConnect: resultSet 3st column=" 	+ content[2]); 
-				System.out.println("DbManager: dbConnect: resultSet 4st column=" 	+ content[3]+ "\r\n"); 
+				System.out.println("DbManager: dbConnect: resultSet 4st column=" 	+ content[3]+ "\r\n"); */
 			}
 			
 			//instanciation du String[][]
@@ -156,13 +159,13 @@ public class DbManager
 			InitDb();
 			int nbrColumn				= myResultSetMetaData.getColumnCount();
 			this.myResultSet		= myState.executeQuery("select * from " + tab[1] + " where designation='" + tab[2] + "'");
+			this.reflectElement("Dvd", this.myResultSet);
 			myResultSet.next();
 			System.out.println(tab[2] + " exist");
 			System.out.println("ID: " + myResultSet.getString(1));
 			System.out.println("Designation: " + myResultSet.getString(2));
 			System.out.println("Category: " + myResultSet.getString(3));
 			System.out.println("Price: " + myResultSet.getString(4));
-			System.out.println(this.productFactory(myResultSet.getString(1), myResultSet.getString(2), myResultSet.getString(3), myResultSet.getInt(4)).toString());
 		}
 		catch (java.sql.SQLException e)	{System.out.println("Designation " + tab[2] + " doesn't exist");}
 		
@@ -195,7 +198,7 @@ public class DbManager
 		try
 		{
 			InitDb();
-			int nbrRow		= myState.executeUpdate("INSERT INTO "+ tab[1] + " VALUES ("+ (id++) +", '"+ tab[2] + "', '" + tab[3] + "', '" + tab[4] +"')");
+			int Row		= myState.executeUpdate("INSERT INTO "+ tab[1] + " VALUES ("+ (id++) +", '"+ tab[2] + "', '" + tab[3] + "', '" + tab[4] +"')");
 			System.out.println(tab[2] + " is created");
 			this.refreshGUI();
 		}
@@ -218,6 +221,49 @@ public class DbManager
 			strOut			+= (strIn.substring(i, i + 1).equalsIgnoreCase("'"))? "''" : strIn.substring(i, i + 1);
 		
 		return strOut;
-	}	
+	}
+	@SuppressWarnings("unchecked")
+	public void reflectElement(String className, ResultSet rs)
+	{
+		//System.out.println("reflectElement: " + className);
+		
+		try
+		{	
+			Class associatedClass								= Class.forName("fr.shortcircuit.model." + className);
+			Class tabParameterTypes[]							= {String.class};
+			
+			//permet de recuperer un constructeur specifique
+			//Constructors tabAssociatedConstructors			= associatedClass.getDeclaredConstructors(tabParameterTypes);
+			
+			//Object newInstance									= associatedClass.newInstance();
+			//currentObject										= newInstance;
+			ResultSetMetaData rslt = rs.getMetaData();
+			for (int i = 1; i !=  rslt.getColumnCount(); i++)
+			{
+				int index = i+1;
+				int typeSQL = rslt.getColumnType(index); 
+				String nomTypeSQL = rslt.getColumnTypeName(index); 
+				String typeJava = rslt.getColumnClassName(index);
+				System.out.println("Type SQL dans java.sql.Types : "+typeSQL);
+				System.out.println("Nom du type SQL : "+nomTypeSQL);
+				System.out.println("Classe java correspondante : "+typeJava);
+				String currentAttributeName		= rslt.getColumnName(i);
+				//String currentAttributeValue	= rs.getString(currentAttributeName);
+				System.out.println("Column Name = " + rslt.getColumnName(i));
+				//System.out.println("Column Value = " + rs.getString(currentAttributeName));
+				
+				//String currentMethodName						= "set" + currentAttributeName.substring(0, 1).toUpperCase() + currentAttributeName.substring(1);
+				//Object tabParameterValues[]						= {currentAttributeValue};
+				
+				//@SuppressWarnings("unchecked")
+				//Method associatedSetMethod						= associatedClass.getMethod(currentMethodName, tabParameterTypes);
+				
+				//associatedSetMethod.invoke(newInstance, tabParameterValues);
+			}
+			
+			//System.out.println("collectionStorer: " + collectionStorer.getClass().getName());
+		}
+		catch (Exception e) {System.out.println("reflectElement: " + e.toString()); e.printStackTrace();}
+	}
 
 }
