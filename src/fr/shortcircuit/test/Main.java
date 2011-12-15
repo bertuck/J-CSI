@@ -23,9 +23,11 @@ import fr.shortcircuit.utils.Parser;
  * 
  * @author Dim
  */
+
+
 public class Main  implements IDatabaseViewConstants
 {
-	public DbManager 				dbManager;
+	public static DbManager 				dbManager;
 	
 	//UI
 	public DesktopWindowView		view;
@@ -39,8 +41,7 @@ public class Main  implements IDatabaseViewConstants
 	public static void main(String argv[])
 	{
 		Main newAppli = new Main();
-		UserInterface UI = new UserInterface();
-		Parser parse = new Parser(UI);
+		UserInterface UI = new UserInterface(dbManager);
 		buildEntities();
 	}
 	
@@ -58,13 +59,13 @@ public class Main  implements IDatabaseViewConstants
 		Category c3	= new Category("Europe");
 		
 		//Products instanciation: declared as "Higher" definition types, constructed with "Lower" types
-		AbstractProduct p1 	= new Dvd("1", 	"Any Given Sunday", 	c1, 10);
-		AbstractProduct p2 	= new Dvd("2", 	"Braveheart", 			c3, 15);
-		AbstractProduct p3 	= new Dvd("3", 	"Tigres et dragons", 	c2, 15);
-		AbstractProduct p4 	= new Dvd("4", 	"Les grands ducs", 		c3, 20);
+		AbstractProduct p1 	= new Dvd("1", 	"Any Given Sunday", 	"US", 10);
+		AbstractProduct p2 	= new Dvd("2", 	"Braveheart", 			"Aza", 15);
+		AbstractProduct p3 	= new Dvd("3", 	"Tigres et dragons", 	"US", 15);
+		AbstractProduct p4 	= new Dvd("4", 	"Les grands ducs", 		"Eu", 20);
 		
-		AbstractProduct p5	= new Game("5", "Heroes of Might & Magic 6", 	c3, 50);
-		AbstractProduct p6	= new Game("6", "Civilisation 5", 				c1, 50);
+		AbstractProduct p5	= new Game("5", "Heroes of Might & Magic 6", 	"US", 50);
+		AbstractProduct p6	= new Game("6", "Civilisation 5", 				"ASIA", 50);
 				
 		//Address
 		Address	a	= new Address();
@@ -110,7 +111,7 @@ public class Main  implements IDatabaseViewConstants
 		dbManager.dbConnect();
 	}
 	
-	private void buildUI()
+	public void buildUI()
 	{
 		view 		= new DesktopWindowView(dbManager);
 		

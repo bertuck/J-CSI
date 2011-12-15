@@ -4,7 +4,12 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
 
+import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
@@ -23,6 +28,8 @@ import fr.shortcircuit.db.DbManager;
 
 public class DesktopWindowView extends JFrame 
 {
+	public JInternalFrame 		jifEx;
+	
 	public DbManager 				myDbManager;
 	
 	//Desktop permettant de contenir des fenetres internes.
@@ -37,24 +44,55 @@ public class DesktopWindowView extends JFrame
 	public JMenuItem				menuAboutContent;
 
 	public JTable					tableResults;
+	
+	private JButton					boutonUpdate;
+	private JButton 				boutonQuitter;
 
 	
 	
 	public DesktopWindowView(DbManager myDbManager)
 	{
-		super("Application Data-Structures Part1");
-		
+		super("Projet Java J-CSI");
 		setMyDbManager(myDbManager);
 		buildDesktopPane();
 		buildToolbarAndMenu();
 		buildTable();
 	}
 	
+ 
+	      
 	public void buildDesktopPane()
 	{	 
+		
+		this.boutonUpdate = new JButton("Update");
+	      // Le constructeur de JButton prend en argument le nom du bouton
+	    this.boutonQuitter = new JButton("Quitter");
+		MouseListener mouseListenerQuit = new MouseAdapter() {
+		      public void mousePressed(MouseEvent mouseEvent) {
+		        int modifiers = mouseEvent.getModifiers();
+		        if ((modifiers & InputEvent.BUTTON1_MASK) == InputEvent.BUTTON1_MASK) {
+		        	System.out.println("Bye !");
+		    		System.exit(0);
+		        }
+		      }
+	 	};
+		MouseListener mouseListenerUpdate = new MouseAdapter() {
+		      public void mousePressed(MouseEvent mouseEvent) {
+		        int modifiers = mouseEvent.getModifiers();
+		        if ((modifiers & InputEvent.BUTTON1_MASK) == InputEvent.BUTTON1_MASK) {
+		        	jifEx.getContentPane().doLayout();
+		        	jifEx.updateUI();
+		        }
+		      }
+	 	};
+	 	boutonQuitter.addMouseListener(mouseListenerQuit);
+	 	boutonUpdate.addMouseListener(mouseListenerUpdate);
+	   
 		this.desk				= new JDesktopPane();
 		
 		this.getContentPane().add(desk, BorderLayout.CENTER);
+		this.getContentPane().add(boutonUpdate, BorderLayout.PAGE_START);
+		this.getContentPane().add(boutonQuitter, BorderLayout.PAGE_END);
 		
 		desk.putClientProperty("JDesktopPane.dragMode", "faster");
 
@@ -70,7 +108,7 @@ public class DesktopWindowView extends JFrame
 
 		//menu
 		menuAbout				= new JMenu("About");	
-		menuAboutContent		= new JMenuItem("About TP2");
+		menuAboutContent		= new JMenuItem("About JCSI");
 		
 		menuAbout.add(menuAboutContent);
 		menuBar.add(menuAbout);
@@ -83,7 +121,7 @@ public class DesktopWindowView extends JFrame
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				JOptionPane.showMessageDialog(getParent(), "TP 2, Data Structures Part 1\r\nSHORT-CIRCUIT"); 
+				JOptionPane.showMessageDialog(getParent(), "Projet java Epitech J-CSI"); 
 			}
 		});
 	}				
@@ -93,16 +131,16 @@ public class DesktopWindowView extends JFrame
  		DefaultTableModel 	tableModelResults 	= new DefaultTableModel(myDbManager.arrayContent, myDbManager.arrayHeader); 		
  		JTable 				tableResults 		= new JTable(tableModelResults);
  		JScrollPane			scpTable 			= new JScrollPane(tableResults);
- 		JInternalFrame 		jifEx				= new JInternalFrame("Table Content", true, true, true, true);
+ 		jifEx				= new JInternalFrame("Table Content", true, true, true, true);
  		
- 		jifEx.getContentPane().add(scpTable, BorderLayout.CENTER); 
+ 		jifEx.getContentPane().add(scpTable, BorderLayout.PAGE_START); 
  		desk.add(jifEx, 1);
  		
  		//Layout & size managment
- 		scpTable.setPreferredSize(new Dimension(300, 75)); 		
+ 		scpTable.setPreferredSize(new Dimension(370, 200)); 		
  		tableResults.setVisible(true);
  		jifEx.setVisible(true);
- 		jifEx.setBounds(50, 50, 300, 75); //x, y, width, height								
+ 		jifEx.setBounds(0, 0, 300, 200); //x, y, width, height								
  		jifEx.pack();
  		
  		//Ex de méthode d'update graphique du composant de plus haut niveau
@@ -110,11 +148,6 @@ public class DesktopWindowView extends JFrame
  		//jifEx.updateUI();			
  	}
 
-
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	//Getters & Setters
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	
 	public DbManager getMyDbManager() 					{return myDbManager;}
 
 	public void setMyDbManager(DbManager myDbManager) 	{this.myDbManager = myDbManager;}

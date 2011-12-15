@@ -4,12 +4,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class UserInterface {
-	
-	private static String	buffer;
-	private boolean isGood = true;
+import fr.shortcircuit.db.DbManager;
+import fr.shortcircuit.utils.Parser;
 
-	public UserInterface() {
+public class UserInterface {
+	public static String buffer;
+	private boolean isGood = true;
+	private static Parser parse;
+
+	public UserInterface(DbManager db) {
+		parse = new Parser(this, db);
 		while  (isGood) {
 			DoPrompt();
 			try {
@@ -26,7 +30,7 @@ public class UserInterface {
 	}
 	public static void DoRead() throws IOException {
 		BufferedReader entreeClavier = new BufferedReader(new InputStreamReader(System.in));
-		buffer = entreeClavier.readLine(); 
-		System.out.println(buffer);
+		buffer = entreeClavier.readLine();
+		parse.DoParse(buffer);
 	}
 }

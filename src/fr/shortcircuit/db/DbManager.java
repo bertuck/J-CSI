@@ -12,6 +12,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.shortcircuit.gui.DesktopWindowView;
+import fr.shortcircuit.model.AbstractProduct;
+import fr.shortcircuit.model.Dvd;
+
 
 public class DbManager
 {
@@ -29,6 +33,7 @@ public class DbManager
 	public String 				arrayContent[][];
 	public String 				arrayHeader[];
 	public String 				strConnectURL;
+	private static int id = 0;
 
 
 	public DbManager()	{}
@@ -46,33 +51,57 @@ public class DbManager
  			//Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
 			Class.forName("com.mysql.jdbc.Driver");
 			
- 			//2eme etape: Definition de l'URL de connection
- 			//strConnectURL				= "jdbc:odbc:java";
-			strConnectURL				= "jdbc:mysql://localhost:3306/jcsi";
- 			//ex d'URL permettant le connection distante: "jdbc:JDataConnect://www.domain.com/db-dsn"; 
- 			
- 			//3eme etape: Creation de l'object de connection
-			myConnect 					= DriverManager.getConnection(strConnectURL, "root", "");//login & password
-		
-			//Option: Acces a un jeu de meta information sur la base avec laquelle on dialogue.
-			myDbMetaData 				= myConnect.getMetaData();
-
-			System.out.println("DbManager: dbConnect: show DataBase MetaData:");
-			System.out.println("DbManager: dbConnect: productName=" 	+ myDbMetaData.getDatabaseProductName());
-			System.out.println("DbManager: dbConnect: productVersion=" 	+ myDbMetaData.getDatabaseProductVersion());
-			//etc... de nombreuses autres info sont disponibles
+ 			InitDb();
+			myResultSet					= myState.executeQuery("Select * from dvd;");
+			refreshGUI();
+		}
+		catch (ClassNotFoundException e) 	{System.out.println("dbConnect ClassNotFoundException: " + e.toString()); e.printStackTrace();}	
+		catch (SQLException e) 				{System.out.println("dbConnect SQLException: " + e.toString()); e.printStackTrace();}	
+		catch (Exception e) 					{System.out.println("dbConnect Exception: " + e.toString()); 	e.printStackTrace();}	
+	}
+	
+	public void InitDb() {
+		try {
+		strConnectURL				= "jdbc:mysql://localhost:3306/jcsi";
+			//ex d'URL permettant le connection distante: "jdbc:JDataConnect://www.domain.com/db-dsn"; 
 			
-			//4eme etape: creation d'une instruction/formule, socle pour executer des requetes
-			myState						= myConnect.createStatement();
+			//3eme etape: Creation de l'object de connection
+		
+		myConnect 					= DriverManager.getConnection(strConnectURL, "root", "");
+	//login & password
+		myDbMetaData 				= myConnect.getMetaData();
 
-			//5eme etape: invocation d'une requ�te (soit une selection stockee dans un ResultSet, soit un update/delete/insert renvoyant le nbr de ligne modifiee(s)).
-			myResultSet					= myState.executeQuery("Select * from client;");
-			//int nbrRow				= myState.executeUpdate("Delete from personne where id=2");
-
-			//Stockage de l'historique des requetes dans un fichier, histoire d'avoir un backup
-			//IoManager.writeFile("Select * from personne;", "queryPerformer.sql", false); 
-
-			//Option: Acces a un jeu de meta information sur la base avec laquelle on dialogue.
+		System.out.println("DbManager: dbConnect: show DataBase MetaData:");
+		System.out.println("DbManager: dbConnect: productName=" 	+ myDbMetaData.getDatabaseProductName());
+		System.out.println("DbManager: dbConnect: productVersion=" 	+ myDbMetaData.getDatabaseProductVersion());
+		//etc... de nombreuses autres info sont disponibles
+		
+		//4eme etape: creation d'une instruction/formule, socle pour executer des requetes
+		myState						= myConnect.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public AbstractProduct productFactory(String id, String designation, String category, int price)
+	{
+		try
+		{
+		id = myResultSet.getString(1);
+		designation	= myResultSet.getString(2);
+		category = myResultSet.getString(3);
+		price = myResultSet.getInt(4);
+		}
+		catch (java.sql.SQLException e)	{System.out.println("dbDisconnect: close statement: " + e.toString());}
+		AbstractProduct myProduct = new Dvd(id, designation, category, price);
+		return myProduct;
+	}
+	
+	public void refreshGUI()
+	{
+		try 
+		{
 			myResultSetMetaData			= myResultSet.getMetaData();
 
 			System.out.println("\r\nDbManager: dbConnect: show Query MetaData:");
@@ -98,16 +127,15 @@ public class DbManager
 			{
 				String[] content 		= new String[nbrColumn];
 				content[0]				= myResultSet.getString(1);         
-				content[1]				= myResultSet.getString(2);         
-
+				content[1]				= myResultSet.getString(2);
+				content[2]				= myResultSet.getString(3);         
+				content[3]				= myResultSet.getString(4);      
 				list.add(content);
 				
 				System.out.println("DbManager: dbConnect: resultSet 1st column=" 	+ content[0]); 
-				System.out.println("DbManager: dbConnect: resultSet 2nd column=" 	+ content[1] + "\r\n"); 
-				
-				//l'object ResultSet peut invoker bon nombre de getters: 
-				//getShort, getDouble, getInt, getByte, getBoolean, getBigDecimal, getBinaryStream, getAsciiStream, 
-				//getDate, getFloat, getBlob, getClob...						
+				System.out.println("DbManager: dbConnect: resultSet 2nd column=" 	+ content[1] );
+				System.out.println("DbManager: dbConnect: resultSet 3st column=" 	+ content[2]); 
+				System.out.println("DbManager: dbConnect: resultSet 4st column=" 	+ content[3]+ "\r\n"); 
 			}
 			
 			//instanciation du String[][]
@@ -115,30 +143,63 @@ public class DbManager
 			int index					= 0;
 		
 			for (String[] content : list)
-				arrayContent[index++] = content; 	
+				arrayContent[index++] = content;
 			
-			//Exemple de prepared Statement
-			myPreparedStatement 		= myConnect.prepareStatement("Insert into table values(?, ?"); 			
-			
-			//myPreparedStatement.setInt(1, 3);
-			//myPreparedStatement.setString(2, 'myStrValue');
-			
-			//myPreparedStatement.executeUpdate();
-			//myPreparedStatement.executeQuery();	
 		}
-		catch (ClassNotFoundException e) 	{System.out.println("dbConnect ClassNotFoundException: " + e.toString()); e.printStackTrace();}	
-		catch (SQLException e) 				{System.out.println("dbConnect SQLException: " + e.toString()); e.printStackTrace();}	
-		catch (Exception e) 					{System.out.println("dbConnect Exception: " + e.toString()); 	e.printStackTrace();}	
-		finally
+		catch (java.sql.SQLException e)	{;}
+	}
+	
+	public void getObjDB(String[] tab)
+	{
+		try 
 		{
-			try {myState.close();}
-			catch (java.sql.SQLException e)	{System.out.println("dbDisconnect: close statement: " + e.toString());}
-			catch (Exception e)	{System.out.println("dbDisconnect: close statement: " + e.toString());}		
-			
-			try {myConnect.close();}
-			catch (java.sql.SQLException e)	{System.out.println("dbDisconnect: close statement: " + e.toString());}
-			catch (Exception e)	{System.out.println("dbDisconnect: close connection: " + e.toString());}		
+			InitDb();
+			int nbrColumn				= myResultSetMetaData.getColumnCount();
+			this.myResultSet		= myState.executeQuery("select * from " + tab[1] + " where designation='" + tab[2] + "'");
+			myResultSet.next();
+			System.out.println(tab[2] + " exist");
+			System.out.println("ID: " + myResultSet.getString(1));
+			System.out.println("Designation: " + myResultSet.getString(2));
+			System.out.println("Category: " + myResultSet.getString(3));
+			System.out.println("Price: " + myResultSet.getString(4));
+			System.out.println(this.productFactory(myResultSet.getString(1), myResultSet.getString(2), myResultSet.getString(3), myResultSet.getInt(4)).toString());
 		}
+		catch (java.sql.SQLException e)	{System.out.println("Designation " + tab[2] + " doesn't exist");}
+		
+	}
+	
+	public void updateObjDB(String[] tab)
+	{
+		try 
+		{
+			int nbrRow		= myState.executeUpdate("update " + tab[1] + " set " + tab[2] + "="+tab[4] + " where " +  tab[2] +"="+ tab[3]);
+			System.out.println(tab[2] + " is updated");
+			this.refreshGUI();
+		}
+		catch (java.sql.SQLException e)	{System.out.println("Designation " + tab[2] + " doesn't exist");}
+	}
+	
+	public void deleteObjDB(String[] tab)
+	{
+		try
+		{
+			int nbrRow		= myState.executeUpdate("delete from " + tab[1] + " where id='" + tab[2] + "'");
+			System.out.println("ID " + tab[2] + " is deleted");
+			this.refreshGUI();
+		}
+		catch (java.sql.SQLException e) {System.out.println("Designation" + tab[2] + " doesn't exist");}
+	}
+	
+	public void insertObjDB(String[] tab)
+	{
+		try
+		{
+			InitDb();
+			int nbrRow		= myState.executeUpdate("INSERT INTO "+ tab[1] + " VALUES ("+ (id++) +", '"+ tab[2] + "', '" + tab[3] + "', '" + tab[4] +"')");
+			System.out.println(tab[2] + " is created");
+			this.refreshGUI();
+		}
+		catch (java.sql.SQLException e) {System.out.println("dbDisconnect: close statement: " + e.toString());}
 	}
 
 	//////////////////

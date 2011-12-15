@@ -6,7 +6,7 @@ package fr.shortcircuit.model;
 
 public abstract class AbstractProduct implements IBonusProducer
 {
-	private Category				category;
+	private String				category;
 		
 	private String 					id, designation, type; 
 	
@@ -19,12 +19,12 @@ public abstract class AbstractProduct implements IBonusProducer
 
 
 	/** Constructor overloading:  */
-	public AbstractProduct(String id, String designation, Category category, int price)
+	public AbstractProduct(String id, String designation, String category, int price)
 	{
 		createStructure(id, designation, category, price);	
 	}
 	
-	public void createStructure(String id, String designation, Category category, int price)
+	public void createStructure(String id, String designation, String category, int price)
 	{
 		this.id					= id;
 		this.designation		= designation;		   
@@ -45,13 +45,13 @@ public abstract class AbstractProduct implements IBonusProducer
 	//Getter and setter
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public Category getCategory()							{return category;}
+	public String getCategory()							{return category;}
 	public String getId()									{return id;}
 	public String getDesignation()							{return designation;}
 	public String getType()									{return type;}
 	public int getPrice()									{return price;}
 	
-	public void setCategories(Category category)			{this.category 			= category;}
+	public void setCategories(String category)			{this.category 			= category;}
 	public void setId(String newIdValue)					{this.id				= newIdValue;}
 	public void setDesignation(String newDesignationValue)	{this.designation		= newDesignationValue;}
 	public void setType(String newTypeValue)				{this.type				= newTypeValue;}
